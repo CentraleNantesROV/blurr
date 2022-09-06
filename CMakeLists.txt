@@ -13,13 +13,13 @@ find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(navio2_ros REQUIRED)
-find_package(class_loader REQUIRED)
 find_package(rclcpp_components REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 
 add_executable(pwm src/pwm.cpp)
-ament_target_dependencies(pwm rclcpp sensor_msgs std_msgs navio2_ros class_loader)
+ament_target_dependencies(pwm rclcpp sensor_msgs std_msgs navio2_ros)
+target_link_libraries(pwm navio2_ros::pwm)
     
 if(NOT WIN32)
   ament_environment_hooks(

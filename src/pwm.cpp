@@ -11,8 +11,13 @@ namespace blurr
 using sensor_msgs::msg::JointState;
 using std_msgs::msg::Bool;
 using std_msgs::msg::Float32;
-using navio2_ros::PWM_Base;
+using navio2_ros::PWM;
 using namespace std::chrono_literals;
+
+// special pins
+constexpr auto thruster_pins{std::array{0,2,4,6,8,10}};
+constexpr auto light_pin{13};
+constexpr auto tilt_pin{12};
 
 // velocity -> pwm map from BlueRobotics @ 16 V
 constexpr auto velocities{std::array{-362.82,-336.69,-299.99,-265.21,-224.11,-180.25,-130.49,-63.83,0.0,0.0,63.0,129.54,180.06,222.91,263.67,302.43,340.46,370.02}};
@@ -37,19 +42,17 @@ float interpPWM(double v)
   return yL + ( yR - yL ) / ( xR - xL ) * ( v - xL );
 }
 
-// special pins
-constexpr auto thruster_pins{std::array{0,2,4,6,8,10}};
-constexpr auto light_pin{13};
-constexpr auto tilt_pin{12};
 
-class BlurrPWM : public PWM_Base
+
+class BlurrPWM : public rclcpp::Node
 {
 public:
-  BlurrPWM(rclcpp::NodeOptions options) : PWM_Base(options, {0, 2, 4, 6, 8, 10, tilt_pin, light_pin})
-  {
-    pwm_timer = create_wall_timer(20ms, [&](){toPWM();});
-    thruster_watchdog = create_wall_timer(std::chrono::seconds(watchdog_period), [&](){watchDog();});
-
+  explicit BlurrPWM(rclcpp::NodeOptions options) :
+    rclcpp::Node("pwm", options),
+    pwm(this, {0, 2, 4, 6, 8, 10, tilt_pin, light_pin}),
+    pwm_timer{create_wall_timer(20ms, [&](){toPWM();})},
+    thruster_watchdog{create_wall_timer(std::chrono::seconds(watchdog_period), [&](){watchDog();})}
+  { 
     run_sub = create_subscription<Bool>("run", 10, [&](Bool::UniquePtr msg){running = msg->data;});
 
     tilt_sub = create_subscription<JointState>("joint_setpoint", 10, [&](JointState::UniquePtr msg)
@@ -66,6 +69,7 @@ public:
 
 private:    
 
+  PWM pwm;
   rclcpp::TimerBase::SharedPtr pwm_timer, thruster_watchdog;
 
   rclcpp::Subscription<Bool>::SharedPtr run_sub;
@@ -94,7 +98,7 @@ private:
   void readThrusters(const JointState &msg)
   {
     thruster_time = now().seconds();
-    const static std::vector<std::string> names{"thruster_0","thruster_1","thruster_2","thruster_3","thruster_4","thruster_5"};
+    const static std::vector<std::string> names{"thruster0","thruster1","thruster2","thruster3","thruster4","thruster5"};
     for(uint i = 0; i<msg.name.size();++i)
     {
       for(uint j = 0; j<6; ++j)
@@ -111,10 +115,7 @@ private:
   void watchDog()
   {
     if(now().seconds() - thruster_time > watchdog_period)
-    {
-      for(auto pin: thruster_pins)
-        toRest(pin);
-    }
+      pwm.stop();
   }
 
   void toPWM()
@@ -126,15 +127,15 @@ private:
 
     if(!running)  return;
 
-    // thrusters
-    for(uint i = 0; i < 6; ++i)
-      set_duty_cycle(pins[i], interpPWM(thruster_force[i]));
+    // thrusters    
+    for(uint i = 0; i < thruster_pins.size(); ++i)
+      pwm.set_duty_cycle(thruster_pins[i], interpPWM(thruster_force[i]));
 
     // tilt: pwm + joint_states
-    set_duty_cycle(tilt_pin, 1500 + 509.3*tilt_angle);
+    pwm.set_duty_cycle(tilt_pin, 1500 + 509.3*tilt_angle);
 
     // lumen light
-    set_duty_cycle(light_pin, 1100 + 800*light_intensity);
+    pwm.set_duty_cycle(light_pin, 1100 + 800*light_intensity);
   }
 };
 
