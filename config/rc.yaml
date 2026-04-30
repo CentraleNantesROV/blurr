@@ -1,0 +1,35 @@
+/blurr/rc/override:
+    type: mavros_msgs/msg/OverrideRCIn
+    light:
+        min: 1100
+        max: 1900
+        to: channels[9]
+        default: 1100
+    tilt:
+        min: 1100
+        max: 1900
+        to: channels[7]
+    # x:
+    #     to: channels[0]
+    #     default: 65535
+    x:
+        min: 1100
+        max: 1900
+        to: channels[0]
+
+    # channels[0]:
+    channels[1]: 65535
+    channels[2]: 65535
+    channels[3]: 65535
+    channels[4]: 65535
+    channels[5]: 65535
+    channels[6]: 65535
+    channels[8]: 65535
+    channels[10]: 65535
+    channels[11]: 65535
+    channels[12]: 65535
+    channels[13]: 65535
+    channels[14]: 65535
+    channels[15]: 65535
+    channels[16]: 65535
+    channels[17]: 65535

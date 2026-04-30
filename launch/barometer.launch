@@ -1,7 +1,0 @@
-<launch>
-<group ns="blurr">
-
-    <node pkg="blurr" type="blurr_barometer" name="barometer_node" respwn="true" output="screen">
-    </node>
-</group>
-</launch>

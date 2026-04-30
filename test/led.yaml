@@ -1,6 +1,0 @@
-led:
-    type: navio2_ros/NavioLED
-    color:
-        min: 0
-        max: 7
-        to: color
