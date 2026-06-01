@@ -2,5 +2,5 @@
 
 <launch>
 	<include file="$(find-pkg-share blurr)/launch/mavros.launch"/>
-	<include file="$(find-pkg-share blurr)/launch/cam.launch"/>
+	<include file="$(find-pkg-share blurr)/launch/cam_launch.py"/>
 </launch>
