@@ -42,7 +42,7 @@ float interpPWM(double v)
 
   const auto xL{thrusts[i]}, xR{thrusts[i+1]};
   const auto yL{pwm[i]}, yR{pwm[i+1]};
-  return yL + ( yR - yL ) / ( xR - xL ) * ( v - xL );
+  return yL + (( yR - yL )  * ( v - xL ))/ ( xR - xL );
 }
 
 class BlurrPWM : public rclcpp::Node
@@ -57,21 +57,19 @@ public:
     tilt_msg.name = {"tilt"};
     tilt_msg.position = {0};
 
-    run_sub = create_subscription<Bool>("run", 10, [&](Bool::UniquePtr msg){running = msg->data;});
+    light_sub = create_subscription<Float32>("light", 10, [&](Float32::UniquePtr msg) {light_intensity = msg->data;});
 
-    tilt_sub = create_subscription<JointState>("joint_setpoint", 10, [&](JointState::UniquePtr msg)
-                                               {cmd_tilt_cb(*msg);});
+    tilt_sub = create_subscription<Float32>("cmd_tilt", 10, [&](Float32::UniquePtr msg)
+                                               {tilt_angle() = std::clamp<double>(msg->data, -M_PI_4, M_PI_4);});
 
     thruster_sub = create_subscription<JointState>("cmd_thrust", 10, [&](JointState::UniquePtr msg)
                                                    {cmd_thrust_cb(*msg);});
-    light_sub = create_subscription<Float32>("light", 10, [&](Float32::UniquePtr msg) {light_intensity = msg->data;});
-
 
   }
 
 private:
 
-  inline auto& tilt_angle()
+  inline double& tilt_angle()
   {
     return tilt_msg.position[0];
   }
@@ -80,16 +78,12 @@ private:
       pwm_timer{create_wall_timer(20ms, [&](){publish();})},
       thruster_watchdog{create_wall_timer(std::chrono::seconds(watchdog_period), [&](){watchDog();})};
 
-  rclcpp::Subscription<Bool>::SharedPtr run_sub;
-  bool running{true};
-
-  rclcpp::Subscription<Float32>::SharedPtr light_sub;
-  rclcpp::Subscription<JointState>::SharedPtr tilt_sub, thruster_sub;
-
+  rclcpp::Subscription<Float32>::SharedPtr tilt_sub, light_sub;
+  rclcpp::Subscription<JointState>::SharedPtr thruster_sub;
 
   // received reference
   std::array<double, 6> thruster_force{0};
-  double thruster_time{};
+  rclcpp::Time thruster_time{};
   JointState tilt_msg;
   float light_intensity{0};
   rclcpp::Publisher<JointState>::SharedPtr tilt_pub;
@@ -100,15 +94,9 @@ private:
 
   // callbacks
 
-  void cmd_tilt_cb(const JointState &msg)
-  {
-    if(msg.name.size() && msg.position.size())
-      tilt_angle() = std::clamp(msg.position[0], -M_PI_4, M_PI_4);
-  }
-
   void cmd_thrust_cb(const JointState &msg)
   {
-    thruster_time = now().seconds();
+    thruster_time = now();
     const static std::vector<std::string> names{"thruster1","thruster2","thruster3","thruster4","thruster5","thruster6"};
     for(uint i = 0; i<msg.name.size();++i)
     {
@@ -125,7 +113,7 @@ private:
 
   void watchDog()
   {
-    if(now().seconds() - thruster_time > watchdog_period)
+    if((now() - thruster_time).seconds() > watchdog_period)
     {
       for(auto pin: thruster_pins)
         pwm.channels[pin] = 1500;
@@ -139,13 +127,11 @@ private:
     tilt_msg.header.stamp = now();
     tilt_pub->publish(tilt_msg);
 
-    if(!running)  return;
-
     // thrusters
     for(uint i = 0; i < thruster_pins.size(); ++i)
       pwm.channels[thruster_pins[i]] = interpPWM(thruster_force[i]);
 
-    // tilt: pwm + joint_states
+    // tilt
     pwm.channels[tilt_pin] = 1500 + 509.3*tilt_angle();
 
     // lumen light
