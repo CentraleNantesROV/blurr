@@ -29,6 +29,7 @@ static_assert (thruster_pins.size() == 6, "thruster pins should be size 6");
 
 constexpr auto watchdog_period{1};
 
+
 float interpPWM(double v)
 {
   // no extrapolation
@@ -54,10 +55,11 @@ public:
     pwm_pub = create_publisher<OverrideRCIn>("rc/override", 2);
 
     tilt_pub = create_publisher<JointState>("joint_states", rclcpp::SensorDataQoS());
-    tilt_msg.name = {"tilt"};
-    tilt_msg.position = {0};
+    joint_states.name = {"thruster1","thruster2","thruster3","thruster4","thruster5","thruster6", "tilt"};
+    joint_states.position.resize(7, 0);
 
-    light_sub = create_subscription<Float32>("light", 10, [&](Float32::UniquePtr msg) {light_intensity = msg->data;});
+    light_sub = create_subscription<Float32>("light", 10, [&](Float32::UniquePtr msg)
+                                             {light_intensity = std::clamp(msg->data, 0.f, 1.f);});
 
     tilt_sub = create_subscription<Float32>("cmd_tilt", 10, [&](Float32::UniquePtr msg)
                                                {tilt_angle() = std::clamp<double>(msg->data, -M_PI_4, M_PI_4);});
@@ -71,7 +73,7 @@ private:
 
   inline double& tilt_angle()
   {
-    return tilt_msg.position[0];
+    return joint_states.position.back();
   }
 
   rclcpp::TimerBase::SharedPtr
@@ -83,8 +85,8 @@ private:
 
   // received reference
   std::array<double, 6> thruster_force{0};
-  rclcpp::Time thruster_time{};
-  JointState tilt_msg;
+  rclcpp::Time thruster_time{now()};
+  JointState joint_states;
   float light_intensity{0};
   rclcpp::Publisher<JointState>::SharedPtr tilt_pub;
 
@@ -105,6 +107,9 @@ private:
         if(msg.name[i] == names[j])
         {
           thruster_force[j] = msg.effort[i];
+          joint_states.position[j] += msg.effort[i]*0.02;
+          if(std::abs(joint_states.position[j]) > 4000)
+            joint_states.position[j] = 0;
           break;
         }
       }
@@ -124,8 +129,8 @@ private:
   void publish()
   {
     // at least remind the tilt angle
-    tilt_msg.header.stamp = now();
-    tilt_pub->publish(tilt_msg);
+    joint_states.header.stamp = now();
+    tilt_pub->publish(joint_states);
 
     // thrusters
     for(uint i = 0; i < thruster_pins.size(); ++i)
@@ -136,6 +141,8 @@ private:
 
     // lumen light
     pwm.channels[light_pin] = 1100 + 800*light_intensity;
+
+    pwm_pub->publish(pwm);
   }
 };
 
