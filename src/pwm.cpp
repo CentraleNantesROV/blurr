@@ -22,7 +22,7 @@ constexpr auto tilt_pin{7};
 // thrust -> pwm map from BlueRobotics @ 16 V
 constexpr auto pwm{std::array{ 1100.00f,1150.00f,1200.00f,1250.00f,1300.00f,1350.00f,1400.00f,1450.00f,1480.00f,1520.00f,1550.00f,1600.00f,1650.00f,1700.00f,1750.00f,1800.00f,1850.00f,1900.00f }};
 //constexpr auto vels{std::array{ 362.81f,336.68f,299.98f,265.20f,224.11f,180.25f,130.49f,63.83f,0.00f,0.00f,63.00f,129.54f,180.06f,222.91f,263.67f,302.42f,340.46f,370.01f }};
-constexpr auto thrusts{std::array{ -39.92f,-34.20f,-26.56f,-20.14f,-14.11f,-9.06f,-4.72f,-1.13f,0.00f,0.00f,1.38f,5.92f,11.41f,17.89f,25.65f,33.55f,43.61f,51.45f }};
+constexpr auto thrusts{std::array{ -39.92f,-34.20f,-26.56f,-20.14f,-14.11f,-9.06f,-4.72f,-1.13f,-0.50f,0.00f,1.38f,5.92f,11.41f,17.89f,25.65f,33.55f,43.61f,51.45f }};
 
 static_assert (thrusts.size() == pwm.size(), "vel/pwm map should have same sizes");
 static_assert (thruster_pins.size() == 6, "thruster pins should be size 6");
