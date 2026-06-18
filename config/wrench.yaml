@@ -1,35 +1,35 @@
-cmd_thrust:
-    type: sensor_msgs/JointState
-    t1:
+/blurr/cmd_wrench:
+    type: geometry_msgs/Wrench
+    x:
         min: -40
         max: 40
-        to: effort[0]
-    t2:
+        to: force.x
+    y:
         min: -40
         max: 40
-        to: effort[1]
-    t3:
+        to: force.y
+    z:
         min: -40
         max: 40
-        to: effort[2]
-    t4:
+        to: force.z
+    roll:
         min: -40
         max: 40
-        to: effort[3]
-    t5:
+        to: torque.x
+    pitch:
         min: -40
         max: 40
-        to: effort[4]
-    t6:
+        to: torque.y
+    yaw:
         min: -40
         max: 40
-        to: effort[5]
-cmd_tilt:
+        to: torque.z
+/blurr/cmd_tilt:
     type: std_msgs/Float32
     angle:
         min: -pi/3
         max: pi/3
-light:
+/blurr/cmd_light:
     type: std_msgs/Float32
     intensity:
         min: 0.

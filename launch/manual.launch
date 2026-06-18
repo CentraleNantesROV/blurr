@@ -5,7 +5,7 @@
 	<group>
 		<push-ros-namespace namespace="blurr"/>
 		<node name="slider_publisher" pkg="slider_publisher" exec="slider_publisher">
-			<param name="config" value="$(find-pkg-share blurr)/config/sliders.yaml"/>
+			<param name="config" value="$(find-pkg-share blurr)/config/wrench.yaml"/>
 		</node>
 	</group>
 

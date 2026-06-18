@@ -215,7 +215,7 @@ private:
     }
 
     // tilt
-    pwm.channels[tilt_pin] = 1500 + 509.3*tilt_angle();
+    pwm.channels[tilt_pin] = 1500 + (800/M_PI_2)*tilt_angle();
 
     // lumen light
     pwm.channels[light_pin] = 1100 + 800*light_intensity;

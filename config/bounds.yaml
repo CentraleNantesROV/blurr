@@ -1,0 +1,37 @@
+/**:
+  ros__parameters:
+    heave:
+      max: 40.0
+      min: -40.0
+    pitch:
+      max: 40.0
+      min: -40.0
+    roll:
+      max: 40.0
+      min: -40.0
+    surge:
+      max: 40.0
+      min: -40.0
+    sway:
+      max: 40.0
+      min: -40.0
+    yaw:
+      max: 40.0
+      min: -40.0
+    # joystick mapping
+    joy:
+        # negative to invert the axis
+        surge: 1
+        sway: 0
+        heave: 4
+        roll: 1000
+        pitch: 1000    # out of bounds
+        yaw: 3
+        tilt: -7 # incremental
+        tilt_reset: 6    # reset
+        # buttons
+        light: 3    # 0 - 100 %
+        arm: 8
+        scale_up: 1
+        scale_down: 2
+

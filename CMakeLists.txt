@@ -20,6 +20,9 @@ if(NOT WIN32)
     )
 endif()
 
+install(PROGRAMS src/teleop.py
+        DESTINATION lib/${PROJECT_NAME})
+
 install(DIRECTORY launch config
         DESTINATION share/${PROJECT_NAME})
   

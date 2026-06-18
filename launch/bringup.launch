@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
 <launch>
-	<include file="$(find-pkg-share blurr)/launch/mavros.launch"/>
+	<include file="$(find-pkg-share blurr)/launch/mavros_launch.py"/>
 	<include file="$(find-pkg-share blurr)/launch/cam_launch.py"/>
 </launch>
