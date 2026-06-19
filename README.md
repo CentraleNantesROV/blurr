@@ -18,9 +18,9 @@ ros2 launch blurr bringup.launch
 
 The main launch file runs :
 
-    - mavros
-    - v4l2_camera
-    - the `pwm` node from this package
+- mavros
+- v4l2_camera
+- the `pwm` node from this package
 
 
 ### `pwm`
@@ -28,16 +28,17 @@ The main launch file runs :
 This node converts thrusts, lights and camera tilt to pwm outputs.
 
 parameters: `use_wrench_input`
-    - if True, subscribe to `Wrench` on `cmd_wrench` if the ROV is configured for manual control
-    - if False, subscribe to `JointState` on `cmd_thrust` if the ROV is configured for thruster control
+
+- if True, subscribe to `Wrench` on `cmd_wrench` if the ROV is configured for manual control
+- if False, subscribe to `JointState` on `cmd_thrust` if the ROV is configured for thruster control
 
 ## From the topside computer
 
 Either publish / subscribe directly to topics, and / or use the launch files from the `topside` folder:
 
-    - `description_launch.py`: spawns a `robot_state_publisher`
-    - `sonar_launch.py`: runs the [ping360](https://github.com/CentraleNantesRobotics/ping360_sonar) node
-    - `teleop_launch.py`: runs teleop + joy nodes
+- `description_launch.py`: spawns a `robot_state_publisher`
+- `sonar_launch.py`: runs the [ping360](https://github.com/CentraleNantesRobotics/ping360_sonar) node
+- `teleop_launch.py`: runs teleop + joy nodes
 
 # Some links
 
