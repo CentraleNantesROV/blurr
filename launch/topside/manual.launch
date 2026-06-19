@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+
+<launch>
+
+	<group>
+		<push-ros-namespace namespace="blurr"/>
+		<node name="slider_publisher" pkg="slider_publisher" exec="slider_publisher">
+			<param name="config" value="$(find-pkg-share blurr)/config/wrench.yaml"/>
+		</node>
+	</group>
+
+</launch>
