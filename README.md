@@ -1,5 +1,11 @@
 ROS package for high-level ROS launch of the BlueOS stack.
 
+# Recommended dependencies (topside computer)
+
+- `bluerov2_description`
+- `ros_management_tools`
+- `ping360_sonar`
+
 # Overall procedure
 
 ## Connect to the BlueROV and run the stack inside the docker

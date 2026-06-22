@@ -10,7 +10,8 @@ def generate_launch_description():
     args = {'angle_step': 1,
             'angle_sector': 360,
             'frequency': 740,
-            'range_max': 2.}
+            'range_max': 2.,
+            'frame': 'blurr/sonar'}
 
     for arg, val in args.items():
         args[arg] = sl.declare_arg(arg, val)
