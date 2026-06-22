@@ -16,7 +16,7 @@ def generate_launch_description():
     mavros_args = sl.arg_map("fcu_url", "gcs_url", "tgt_system", "tgt_component",
                           "log_output", "fcu_protocol", "respawn_mavros", "namespace")
     mavros_args.update({"pluginlists_yaml": sl.find('blurr', 'apm_pluginlist.yaml'),
-                     "config_yaml": sl.find('mavros_control', 'apm_config.yaml')})
+                     "config_yaml": sl.find('blurr', 'apm_config.yaml')})
 
     sl.include('mavros', 'node.launch',
             launch_arguments=mavros_args)
