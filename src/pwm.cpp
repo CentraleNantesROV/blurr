@@ -84,6 +84,8 @@ public:
     {
       wrench_sub = create_subscription<Wrench>("cmd_wrench", 10, [&](Wrench::UniquePtr msg)
                                                {cmd_wrench_cb(*msg);});
+      wrench_teleop_sub = create_subscription<Wrench>("cmd_wrench_teleop", 10, [&](Wrench::UniquePtr msg)
+                                                      {cmd_wrench_teleop_cb(*msg);});
       wrench_min.resize(6, -40.);
       wrench_max.resize(6, 40.);
 
@@ -122,15 +124,16 @@ private:
   bool use_wrench{declare_parameter("use_wrench_input", true)};
 
   rclcpp::Subscription<JointState>::SharedPtr thruster_sub;
-  rclcpp::Subscription<geometry_msgs::msg::Wrench>::SharedPtr wrench_sub;
+  rclcpp::Subscription<geometry_msgs::msg::Wrench>::SharedPtr wrench_sub, wrench_teleop_sub;
   std::vector<double> wrench_min;
   std::vector<double> wrench_max;
   rclcpp::Node::OnSetParametersCallbackHandle::SharedPtr wrench_bound_callback;
+  bool wrench_teleop_override{false};
 
   // received reference
   std::array<double, 6> thruster_force{0};
   bool thruster_change{true};
-  rclcpp::Time thruster_time{now()};
+  rclcpp::Time thruster_time{now()}, teleop_time{now()};
   JointState joint_states;
   float light_intensity{0};
   rclcpp::Publisher<JointState>::SharedPtr tilt_pub;
@@ -139,12 +142,31 @@ private:
   OverrideRCIn pwm;
   rclcpp::Publisher<OverrideRCIn>::SharedPtr pwm_pub;
 
+  inline auto time_since(const rclcpp::Time &time)
+  {
+    return (now() - time).seconds();
+  }
+
   // callbacks
+
+  void cmd_wrench_teleop_cb(const Wrench &msg)
+  {
+    thruster_time = teleop_time = now();
+
+    pwm.channels[0] = interpWrench(msg.torque.y, wrench_min[0], wrench_max[0]);
+    pwm.channels[1] = interpWrench(msg.torque.x, wrench_min[1], wrench_max[1]);
+    pwm.channels[2] = interpWrench(msg.force.z, wrench_min[2], wrench_max[2]);
+    pwm.channels[3] = interpWrench(msg.torque.z, wrench_min[3], wrench_max[3]);
+    pwm.channels[4] = interpWrench(msg.force.x, wrench_min[4], wrench_max[4]);
+    pwm.channels[5] = interpWrench(msg.force.y, wrench_min[5], wrench_max[5]);
+  }
 
   void cmd_wrench_cb(const Wrench &msg)
   {
-    thruster_time = now();
+    if(time_since(teleop_time) < 0.1)
+      return;
 
+    thruster_time = now();
     pwm.channels[0] = interpWrench(msg.torque.y, wrench_min[0], wrench_max[0]);
     pwm.channels[1] = interpWrench(msg.torque.x, wrench_min[1], wrench_max[1]);
     pwm.channels[2] = interpWrench(msg.force.z, wrench_min[2], wrench_max[2]);
@@ -190,7 +212,7 @@ private:
 
   void watchDog()
   {
-    if((now() - thruster_time).seconds() > watchdog_period)
+    if(time_since(thruster_time) > watchdog_period)
     {
       for(auto pin: {0,1,2,3,4,5})
         pwm.channels[pin] = 1500;

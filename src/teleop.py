@@ -32,7 +32,8 @@ class JoyToWrenchNode(Node):
             'arm': 8,
             'scale_up': 1,
             'scale_down': 2,
-            'tilt_reset': 6
+            'tilt_reset': 6,
+            'override': 7
         }
 
         self.joy_map = {}
@@ -43,7 +44,7 @@ class JoyToWrenchNode(Node):
             self.joy_map[dof] = (idx, coef)
 
 
-        self.wrench_pub = self.create_publisher(Wrench, 'cmd_wrench', 1)
+        self.wrench_pub = self.create_publisher(Wrench, 'cmd_wrench_teleop', 1)
         self.tilt_pub = self.create_publisher(Float32, 'cmd_tilt', 1)
         self.light_pub = self.create_publisher(Float32, 'cmd_light', 1)
         self.sub = self.create_subscription(Joy, 'joy', self.joy_cb, 10)
@@ -56,6 +57,7 @@ class JoyToWrenchNode(Node):
         self.arm.value = True
         self.scale = 1.
 
+        self.override = True
         self.joy = None
         self.timer = self.create_timer(0.1, self.publish)
 
@@ -89,6 +91,14 @@ class JoyToWrenchNode(Node):
                 else:
                     self.get_logger().info('Dearming')
 
+            # detect press of override button
+            if has_changed('override'):
+                self.override = not self.override
+                if self.override:
+                    self.get_logger().info('Overriding auto wrench')
+                else:
+                    self.get_logger().warn('Letting auto wrench through')
+
             # detect scale up
             if has_changed('scale_up'):
                 self.scale = min(1., max(0., self.scale + 0.05))
@@ -105,30 +115,31 @@ class JoyToWrenchNode(Node):
             return
 
         # wrench part
-        wrench = Wrench()
-        for dof in ('surge','sway','heave','roll','pitch','yaw'):
-            idx, coef = self.joy_map[dof]
-            if idx >= len(self.joy.axes):
-                continue
-            scaled = self.scale_axis_to_range(coef*self.joy.axes[idx],
-                                              self.limits[f'{dof}.min'],
-                                              self.limits[f'{dof}.max'])
-            scaled *= self.scale
+        if self.override:
+            wrench = Wrench()
+            for dof in ('surge','sway','heave','roll','pitch','yaw'):
+                idx, coef = self.joy_map[dof]
+                if idx >= len(self.joy.axes):
+                    continue
+                scaled = self.scale_axis_to_range(coef*self.joy.axes[idx],
+                                                self.limits[f'{dof}.min'],
+                                                self.limits[f'{dof}.max'])
+                scaled *= self.scale
 
-            if dof == 'surge':
-                wrench.force.x = scaled
-            elif dof == 'sway':
-                wrench.force.y = scaled
-            elif dof == 'heave':
-                wrench.force.z = scaled
-            elif dof == 'roll':
-                wrench.torque.x = scaled
-            elif dof == 'pitch':
-                wrench.torque.y = scaled
-            elif dof == 'yaw':
-                wrench.torque.z = scaled
+                if dof == 'surge':
+                    wrench.force.x = scaled
+                elif dof == 'sway':
+                    wrench.force.y = scaled
+                elif dof == 'heave':
+                    wrench.force.z = scaled
+                elif dof == 'roll':
+                    wrench.torque.x = scaled
+                elif dof == 'pitch':
+                    wrench.torque.y = scaled
+                elif dof == 'yaw':
+                    wrench.torque.z = scaled
 
-        self.wrench_pub.publish(wrench)
+            self.wrench_pub.publish(wrench)
 
         # tilt with internal state
         idx, coef = self.joy_map['tilt']
