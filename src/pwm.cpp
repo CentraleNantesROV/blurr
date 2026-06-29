@@ -128,7 +128,6 @@ private:
   std::vector<double> wrench_min;
   std::vector<double> wrench_max;
   rclcpp::Node::OnSetParametersCallbackHandle::SharedPtr wrench_bound_callback;
-  bool wrench_teleop_override{false};
 
   // received reference
   std::array<double, 6> thruster_force{0};
