@@ -20,7 +20,7 @@ if(NOT WIN32)
     )
 endif()
 
-install(PROGRAMS src/teleop.py
+install(PROGRAMS src/teleop.py src/monitor.py
         DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY launch config
