@@ -13,7 +13,7 @@ def generate_launch_description():
 
     if sl.arg('rviz'):
         # check IMU pose
-        sl.node('pose_to_tf', 'pose_to_tf',
+        sl.node('localization_msgs_tools', 'pose_to_tf',
                 parameters = {'topic': '/blurr/imu/data',
                               'parent_frame': 'blurr/imu',
                               'child_frame': 'world',
